@@ -170,11 +170,11 @@ class CRUDController extends AbstractController
             );
         } catch (ModelManagerException $e) {
             // NEXT_MAJOR: Remove this catch.
-            $this->handleModelManagerException($e);
+            $errorMessage = $this->handleModelManagerException($e);
 
             $this->addFlash(
                 'sonata_flash_error',
-                $this->trans('flash_batch_delete_error', [], 'SonataAdminBundle')
+                $errorMessage ?? $this->trans('flash_batch_delete_error', [], 'SonataAdminBundle')
             );
         } catch (ModelManagerThrowable $e) {
             $errorMessage = $this->handleModelManagerThrowable($e);
@@ -229,7 +229,7 @@ class CRUDController extends AbstractController
                 );
             } catch (ModelManagerException $e) {
                 // NEXT_MAJOR: Remove this catch.
-                $this->handleModelManagerException($e);
+                $errorMessage = $this->handleModelManagerException($e);
 
                 if ($this->isXmlHttpRequest($request)) {
                     return $this->renderJson(['result' => 'error']);
@@ -237,7 +237,7 @@ class CRUDController extends AbstractController
 
                 $this->addFlash(
                     'sonata_flash_error',
-                    $this->trans(
+                    $errorMessage ?? $this->trans(
                         'flash_delete_error',
                         ['%name%' => $this->escapeHtml($objectName)],
                         'SonataAdminBundle'
@@ -334,7 +334,7 @@ class CRUDController extends AbstractController
                     return $this->redirectTo($request, $existingObject);
                 } catch (ModelManagerException $e) {
                     // NEXT_MAJOR: Remove this catch.
-                    $this->handleModelManagerException($e);
+                    $errorMessage = $this->handleModelManagerException($e);
 
                     $isFormValid = false;
                 } catch (ModelManagerThrowable $e) {
@@ -610,7 +610,7 @@ class CRUDController extends AbstractController
                     return $this->redirectTo($request, $newObject);
                 } catch (ModelManagerException $e) {
                     // NEXT_MAJOR: Remove this catch.
-                    $this->handleModelManagerException($e);
+                    $errorMessage = $this->handleModelManagerException($e);
 
                     $isFormValid = false;
                 } catch (ModelManagerThrowable $e) {
@@ -1107,13 +1107,13 @@ class CRUDController extends AbstractController
 
     /**
      * @throws \Exception
+     *
+     * @return string|null A custom error message to display in the flag bag instead of the generic one
      */
-    protected function handleModelManagerException(\Exception $exception): void
+    protected function handleModelManagerException(\Exception $exception)
     {
         if ($exception instanceof ModelManagerThrowable) {
-            $this->handleModelManagerThrowable($exception);
-
-            return;
+            return $this->handleModelManagerThrowable($exception);
         }
 
         @trigger_error(sprintf(
